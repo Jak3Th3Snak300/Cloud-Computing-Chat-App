@@ -58,15 +58,20 @@ class ChatServerProtocol(asyncio.Protocol):
             # Make sure user only gets messages if logged in
             transports = [k for k, v in ChatServerProtocol.clients.items() if room.strip() in v['rooms'] and v['login-name']!=None]
             sender = ChatServerProtocol.clients[self._transport]['login-name']
-            if sender != None:
-                message = "{}\n\t\tSender: {}\n\t\tRoom: {}".format(msg.strip(), sender.strip(), room.strip())
-                msg_to_send = '/MSG {}$'.format(message)
-                for transport in transports:
-                    transport.write(msg_to_send.encode('utf-8'))
-                response = '/post success$'
-                self._transport.write(response.encode('utf-8'))
+            # print(room.strip() in ChatServerProtocol.clients[self._transport]['rooms'])
+            if room.strip() in ChatServerProtocol.clients[self._transport]['rooms']:
+                if sender != None:
+                    message = "{}\n\t\tSender: {}\n\t\tRoom: {}".format(msg.strip(), sender.strip(), room.strip())
+                    msg_to_send = '/MSG {}$'.format(message)
+                    for transport in transports:
+                        transport.write(msg_to_send.encode('utf-8'))
+                    response = '/post success$'
+                    self._transport.write(response.encode('utf-8'))
+                else:
+                    response = '/post must login$'
+                    self._transport.write(response.encode('utf-8'))
             else:
-                response = '/post must login$'
+                response = '/post must join room to post$'
                 self._transport.write(response.encode('utf-8'))
 
         elif command.startswith('/addprivateroom '):
@@ -86,6 +91,34 @@ class ChatServerProtocol(asyncio.Protocol):
             ChatServerProtocol.rooms.append({'name': name.strip(), 'owner': owner, 'description': description})
             response = '/addprivateroom success$'
             self._transport.write(response.encode('utf-8'))
+
+        elif command.startswith('/joinprivateroom'):
+            # print('chk1')
+            room_name = command.lstrip('/joinprivateroom').rstrip('$')
+            for rooms in ChatServerProtocol.rooms:
+                if rooms['name'] == room_name.strip():
+                    ChatServerProtocol.clients[self._transport]['rooms'].append(room_name.strip())
+                    # print(ChatServerProtocol.clients[self._transport])
+                    response = '/joinprivateroom joined$'
+                    self._transport.write(response.encode('utf-8'))
+                    return
+            response = '/joinprivateroom does not exist or has a typo$'
+            self._transport.write(response.encode('utf-8'))
+            return
+
+        elif command.startswith('/leaveprivateroom'):
+            print('chk1')
+            room_name = command.lstrip('/joinprivateroom').rstrip('$')
+            for rooms in ChatServerProtocol.rooms:
+                if rooms['name'] == room_name.strip():
+                    ChatServerProtocol.clients[self._transport]['rooms'].append(room_name.strip())
+                    print(ChatServerProtocol.clients[self._transport])
+                    response = '/joinprivateroom joined$'
+                    self._transport.write(response.encode('utf-8'))
+                    return
+            response = '/joinprivateroom does not exist or has a typo$'
+            self._transport.write(response.encode('utf-8'))
+            return
 
         elif command.startswith('/dm '):
             # expected command format: /dm username&message$

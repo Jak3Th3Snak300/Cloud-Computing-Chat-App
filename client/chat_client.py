@@ -31,6 +31,13 @@ class RoomLoginError(Exception):
     pass
 
 
+class JoinResponseError(Exception):
+    pass
+
+class LeaveResponseError(Exception):
+    pass
+
+
 class ChatClientProtocol(asyncio.Protocol):
     def __init__(self):
         self._pieces = []
@@ -154,6 +161,8 @@ class ChatClient:
         success = post_response.lstrip('/post').rstrip('$')
         if success.strip() == "must login":
             raise RoomLoginError()
+        if success.strip() == "must join room to post":
+            raise MessagePostError()
 
     async def get_user_msg(self):
         return await self._protocol._user_messages_q.get()
@@ -169,7 +178,19 @@ class ChatClient:
             raise RoomConflictError()
         if success.strip() == "must login":
             raise RoomLoginError()
-        # return addroom_response
+        return success
+
+    async def join_private_room(self, room_name):
+        self._transport.write('/joinprivateroom {}$'.format(room_name).encode('utf-8'))
+        join_response = await self._protocol._responses_q.get()
+        join_response = join_response.lstrip('/joinprivateroom').rstrip('$')
+        if join_response.strip() == "joined":
+            return join_response.strip()
+        if join_response.strip() == "does not exist or has a typo":
+            raise JoinResponseError()
+
+    async def leave_private_room(selfself, room_name):
+        return
 
     async def direct_message(self, username, message):
         self._transport.write('/dm {}&{}$'.format(username, message).encode('utf-8'))
@@ -180,7 +201,6 @@ class ChatClient:
         if success.strip() == 'must login':
             raise LoginError()
         return success
-
 
 
 if __name__ == '__main__':
