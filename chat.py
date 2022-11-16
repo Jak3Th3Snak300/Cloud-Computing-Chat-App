@@ -114,6 +114,8 @@ async def handle_user_input(chat_client, loop):
             try:
                 room_to_join = await aioconsole.ainput('enter the private room name: ')
                 response = await chat_client.join_private_room(room_to_join)
+                if response == 'you are already in this private room':
+                    print(response)
                 if response == 'joined':
                     print('room joined')
             except JoinResponseError:
