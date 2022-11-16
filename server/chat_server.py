@@ -107,16 +107,15 @@ class ChatServerProtocol(asyncio.Protocol):
             return
 
         elif command.startswith('/leaveprivateroom'):
-            print('chk1')
-            room_name = command.lstrip('/joinprivateroom').rstrip('$')
+            room_name = command.lstrip('/leaveprivateroom').rstrip('$') # Megan: fixed join to leaveprivateroom
             for rooms in ChatServerProtocol.rooms:
                 if rooms['name'] == room_name.strip():
-                    ChatServerProtocol.clients[self._transport]['rooms'].append(room_name.strip())
+                    ChatServerProtocol.clients[self._transport]['rooms'].remove(room_name.strip())
                     print(ChatServerProtocol.clients[self._transport])
-                    response = '/joinprivateroom joined$'
+                    response = '/leaveprivateroom left$'
                     self._transport.write(response.encode('utf-8'))
                     return
-            response = '/joinprivateroom does not exist or has a typo$'
+            response = '/leaveprivateroom does not exist or has a typo$'
             self._transport.write(response.encode('utf-8'))
             return
 

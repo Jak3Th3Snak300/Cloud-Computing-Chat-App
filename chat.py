@@ -131,7 +131,7 @@ async def handle_user_input(chat_client, loop):
                 room_to_leave = await aioconsole.ainput('enter the name of the room to leave: ')
                 response = await chat_client.leave_private_room(room_to_leave)
                 if response == 'left':
-                    print('you have left this room')
+                    print('you have left {}'.format(room_to_leave)) # fixed parentheses
             except LeaveResponseError:
                 print('error leaving private room')
 
