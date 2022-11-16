@@ -10,6 +10,8 @@ from client.chat_client import (
     LoginError,
     RoomConflictError,
     RoomLoginError,
+    JoinResponseError,
+    LeaveResponseError,
     MessagePostError
 )
 
@@ -28,8 +30,8 @@ async def handle_user_input(chat_client, loop):
         print('< 4 > list rooms')
         print('< 5 > post message to public room')
         print('< 6 > create private room')
-        # print('< 7 > join private room')
-        # print('< 8 > leave room')
+        print('< 7 > join private room')
+        print('< 8 > leave room')
         print('< 9 > direct message')
         print('< 10 > post message to private room')
 
@@ -81,8 +83,12 @@ async def handle_user_input(chat_client, loop):
             try:
                 user_message = await aioconsole.ainput('enter your message: ')
                 await chat_client.post(user_message, 'public')
+
             except RoomLoginError:
                 print("Error posting message to room. Please login and try again.")
+
+            except MessagePostError:
+                print("Error posting message to room. Please join room and try again.")
 
             except Exception as e:
                 print('error posting message {}'.format(e))
@@ -95,7 +101,9 @@ async def handle_user_input(chat_client, loop):
                     print('Error: room name must be 10 characters or less and cannot contain any special characters.')
                     room_name = await aioconsole.ainput('enter a room name: ')
                 description = await aioconsole.ainput('enter the room description: ')
-                await chat_client.add_private_room(room_name, description)
+                response = await chat_client.add_private_room(room_name, description)
+                if response.strip() == "success":
+                    print("created room")
 
             except RoomConflictError:
                 print("Error creating private room. Room already exists.")
@@ -108,10 +116,24 @@ async def handle_user_input(chat_client, loop):
                 print(e)
 
         # 7- join private room
-        # elif command == '7':
+        elif command == '7':
+            try:
+                room_to_join = await aioconsole.ainput('enter the private room name: ')
+                response = await chat_client.join_private_room(room_to_join)
+                if response == 'joined':
+                    print('room joined')
+            except JoinResponseError:
+                print('error joining private room')
 
         # 8- leave a room
-        # elif command == '8':
+        elif command == '8':
+            try:
+                room_to_leave = await aioconsole.ainput('enter the name of the room to leave: ')
+                response = await chat_client.leave_private_room(room_to_leave)
+                if response == 'left':
+                    print('you have left this room')
+            except LeaveResponseError:
+                print('error leaving private room')
 
         # 9- direct message
         elif command == '9':
@@ -128,7 +150,7 @@ async def handle_user_input(chat_client, loop):
             except LoginError:
                 print('Error sending direct message. Please login and try again.')
 
-            except Exeception as e:
+            except Exception as e:
                 print("Error sending message to user.")
                 print(e)
 
@@ -141,6 +163,9 @@ async def handle_user_input(chat_client, loop):
 
             except RoomLoginError:
                 print("Error posting message to room. Please login and try again.")
+
+            except MessagePostError:
+                print("Error posting message to room. Please join room and try again.")
 
             except Exception as e:
                 print('Error posting message {} to {} room'.format(user_message, room_name))
