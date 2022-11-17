@@ -186,17 +186,21 @@ class ChatClient:
         join_response = join_response.lstrip('/joinprivateroom').rstrip('$')
         if join_response.strip() == "joined":
             return join_response.strip()
+        if join_response.strip() == "must login":
+            raise RoomLoginError()
         if join_response.strip() == "does not exist or has a typo":
             raise JoinResponseError()
 
     async def leave_private_room(self, room_name):
         self._transport.write('/leaveprivateroom {}$'.format(room_name).encode('utf-8'))
-        join_response = await self._protocol._responses_q.get()
-        join_response = join_response.lstrip('/leaveprivateroom').rstrip('$')
-        if join_response.strip() == "left":
-            return join_response.strip()
-        if join_response.strip() == "does not exist or has a typo":
-            raise JoinResponseError()
+        leave_response = await self._protocol._responses_q.get()
+        leave_response = leave_response.lstrip('/leaveprivateroom').rstrip('$')
+        if leave_response.strip() == "left":
+            return leave_response.strip()
+        if leave_response.strip() == "must login":
+            raise RoomLoginError()
+        if leave_response.strip() == "does not exist or has a typo":
+            raise LeaveResponseError()
 
     async def direct_message(self, username, message):
         self._transport.write('/dm {}&{}$'.format(username, message).encode('utf-8'))

@@ -93,7 +93,12 @@ class ChatServerProtocol(asyncio.Protocol):
             self._transport.write(response.encode('utf-8'))
 
         elif command.startswith('/joinprivateroom'):
-            # print('chk1')
+            # Check user is logged in
+            if ChatServerProtocol.clients[self._transport]['login-name'] == None:
+                response = '/joinprivateroom must login$'
+                self._transport.write(response.encode('utf-8'))
+                return
+
             room_name = command.lstrip('/joinprivateroom').rstrip('$')
             for rooms in ChatServerProtocol.rooms:
                 if rooms['name'] == room_name.strip():
@@ -107,6 +112,12 @@ class ChatServerProtocol(asyncio.Protocol):
             return
 
         elif command.startswith('/leaveprivateroom'):
+            # Check user is logged in
+            if ChatServerProtocol.clients[self._transport]['login-name'] == None:
+                response = '/leaveprivateroom must login$'
+                self._transport.write(response.encode('utf-8'))
+                return
+
             room_name = command.lstrip('/leaveprivateroom').rstrip('$') # Megan: fixed join to leaveprivateroom
             for rooms in ChatServerProtocol.rooms:
                 if rooms['name'] == room_name.strip():
