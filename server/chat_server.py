@@ -88,12 +88,13 @@ class ChatServerProtocol(asyncio.Protocol):
             self._transport.write(response.encode('utf-8'))
 
         elif command.startswith('/joinprivateroom'):
-            print('chk1')
             room_name = command.lstrip('/joinprivateroom').rstrip('$')
+            if room_name.strip() in ChatServerProtocol[self._transport]['rooms']:
+                response = '/joinprivateroom you are already in this private room$'
+                self._transport.write(response.encode('utf-8'))
             for rooms in ChatServerProtocol.rooms:
                 if rooms['name'] == room_name.strip():
                     ChatServerProtocol.clients[self._transport]['rooms'].append(room_name.strip())
-                    print(ChatServerProtocol.clients[self._transport])
                     response = '/joinprivateroom joined$'
                     self._transport.write(response.encode('utf-8'))
                     return
