@@ -123,6 +123,9 @@ async def handle_user_input(chat_client, loop):
                 if response == 'joined':
                     print('room joined')
 
+            except RoomConflictError:
+                print("Error joining private room. You are already in this room.")
+
             except RoomLoginError:
                 print("Error joining private room. Please login and try again.")
 
@@ -142,7 +145,9 @@ async def handle_user_input(chat_client, loop):
 
             except LeaveResponseError:
                 print('Error leaving private room -- room does not exist or you are not a member.\n' +
-                      'Please try again with a valid room name')
+                      'Please try again with a valid room name.')
+            except RoomConflictError:
+                print("Error leaving private room. Cannot leave a room you are not a member of.")
 
         # 9- direct message
         elif command == '9':

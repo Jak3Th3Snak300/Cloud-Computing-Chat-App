@@ -28,8 +28,6 @@ class ChatServerProtocol(asyncio.Protocol):
             self._transport.write(response.encode('utf-8'))
 
         elif command.startswith('/login '):
-            # TODO: what to do when already logged-in
-
             login_name = command.lstrip('/login').rstrip('$').strip()
 
             all_login_names = [v['login-name'] for v in ChatServerProtocol.clients.values()]
@@ -100,6 +98,10 @@ class ChatServerProtocol(asyncio.Protocol):
                 return
 
             room_name = command.lstrip('/joinprivateroom').rstrip('$')
+            if room_name.strip() in ChatServerProtocol.clients[self._transport]['rooms']:
+                response = '/joinprivateroom you are already in this private room$'
+                self._transport.write(response.encode('utf-8'))
+                return
             for rooms in ChatServerProtocol.rooms:
                 if rooms['name'] == room_name.strip():
                     ChatServerProtocol.clients[self._transport]['rooms'].append(room_name.strip())
@@ -118,7 +120,12 @@ class ChatServerProtocol(asyncio.Protocol):
                 self._transport.write(response.encode('utf-8'))
                 return
 
-            room_name = command.lstrip('/leaveprivateroom').rstrip('$') # Megan: fixed join to leaveprivateroom
+            room_name = command.lstrip('/leaveprivateroom').rstrip('$')
+            if room_name.strip() not in ChatServerProtocol.clients[self._transport]['rooms']:
+                response = '/leaveprivateroom you are not in this room$'
+                self._transport.write(response.encode('utf-8'))
+                return
+
             for rooms in ChatServerProtocol.rooms:
                 if rooms['name'] == room_name.strip():
                     ChatServerProtocol.clients[self._transport]['rooms'].remove(room_name.strip())
