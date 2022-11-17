@@ -182,13 +182,21 @@ class ChatClient:
         self._transport.write('/joinprivateroom {}$'.format(room_name).encode('utf-8'))
         join_response = await self._protocol._responses_q.get()
         join_response = join_response.lstrip('/joinprivateroom').rstrip('$')
+        if join_response.strip() == "you are already in this private room":
+            return join_response.strip()
         if join_response.strip() == "joined":
             return join_response.strip()
         if join_response.strip() == "does not exist or has a typo":
             raise JoinResponseError()
 
-    async def leave_private_room(selfself, room_name):
-        return
+    async def leave_private_room(self, room_name):
+        self._transport.write('/leaveprivateroom {}$'.format(room_name).encode('utf-8'))
+        join_response = await self._protocol._responses_q.get()
+        join_response = join_response.lstrip('/leaveprivateroom').rstrip('$')
+        if join_response.strip() == "left":
+            return join_response.strip()
+        if join_response.strip() == "does not exist or has a typo":
+            raise JoinResponseError()
 
     async def direct_message(self, username, message):
         self._transport.write('/dm {}&{}$'.format(username, message).encode('utf-8'))
